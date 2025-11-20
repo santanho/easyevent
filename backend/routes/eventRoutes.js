@@ -29,8 +29,8 @@ const sendInvitationEmail = async (toEmail, eventTitle, ownerName) => {
   // 3. ⭐️ สร้าง Transporter ภายใน Function (แก้ไขปัญหาการโหลด API Key) ⭐️
   const transporter = nodemailer.createTransport({
     host: 'smtp.resend.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: {
       user: 'resend',
       pass: process.env.RESEND_API_KEY // อ่าน API Key ที่นี่

@@ -174,7 +174,7 @@ router.get('/line/callback', async (req, res) => {
     console.log('LINE Callback: Success! Redirecting back to Frontend...');
     
     // ( "ส่ง" (Redirect) ... "Browser" (เบราว์เซอร์) ... "กลับ" (Back) ... "ไป" (To) ... "หน้า "Setting"" (Settings "Page") ... (ที่ "เรา" (We) ... "จาก" (Came) ... "มา" (From)))
-    res.redirect('http://localhost:3000/Easyevent/settings');
+    res.redirect('https://easyevent-taupe.vercel.app//Easyevent/settings');
 
   } catch (error) {
     console.error('LINE Callback Error:', error.response ? error.response.data : error.message);

@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const nodemailer = require('nodemailer'); // (Email)
 const notifyLine = require('../utils/lineNotify.js');
-
+const { Resend } = require('resend');
 const { protect } = require('../middleware/authMiddleware.js');
 const Event = require('../models/eventModel.js'); 
 const User = require('../models/userModel.js');
@@ -11,34 +10,45 @@ const Webhook = require('../models/webhookModel.js');
 
 // (ฟังก์ชัน "Email Helper" ... "เหมือนเดิม")
 const sendInvitationEmail = async (toEmail, eventTitle, ownerName) => {
-  // 1. Setup
-  const SENDER = process.env.SENDER_EMAIL;
-  // ใช้ FRONTEND_URL จาก .env (หรือ fallback เป็น localhost:3000)
-  const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+    const SENDER = process.env.SENDER_EMAIL; 
+    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"; 
+    const rsvpLink = `${FRONTEND_URL}/Easyevent/invited`; 
 
-  console.log(`[Email Debug] SENDER: ${process.env.SENDER_EMAIL}`);
-  console.log(`[Email Debug] KEY STATUS: ${process.env.RESEND_API_KEY ? 'Loaded' : 'MISSING'}`);
-
-  // 2. Resend Sandbox Check (การป้องกันสำคัญในการทดสอบ)
-  // ❌ ข้อความจะถูกส่งเฉพาะอีเมลที่ยืนยันแล้วเท่านั้น ❌
-  if (!toEmail || toEmail.toLowerCase() !== SENDER.toLowerCase()) {
-    console.error(`Resend Sandbox Warning: Can only send TO verified email (${SENDER}). Skipping email to ${toEmail}`);
-    return;
-  }
-
-  // 3. ⭐️ สร้าง Transporter ภายใน Function (แก้ไขปัญหาการโหลด API Key) ⭐️
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.resend.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'resend',
-      pass: process.env.RESEND_API_KEY // อ่าน API Key ที่นี่
+    // Resend Sandbox Check
+    if (!toEmail || toEmail.toLowerCase() !== SENDER.toLowerCase()) {
+        console.log(`Skipping email to ${toEmail} (Sandbox Mode)`);
+        return; 
     }
-  });
 
-  // 4. Email Content (สร้างลิงก์ RSVP ที่มาจาก Frontend URL)
-  const rsvpLink = `${FRONTEND_URL}/Easyevent/invited`;
+    // ⭐️ ใช้ Resend SDK แทน Nodemailer (ผ่าน HTTP ไม่โดนบล็อก)
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'Event App <onboarding@resend.dev>',
+            to: [toEmail], // ต้องเป็น Array
+            subject: `[Event Invitation] 💌 คุณถูกเชิญเข้าร่วม: ${eventTitle}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
+                    <h2>คำเชิญเข้าร่วมกิจกรรม</h2>
+                    <p>คุณ <strong>${ownerName}</strong> ได้เชิญคุณเข้าร่วม: <strong>${eventTitle}</strong></p>
+                    <a href="${rsvpLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Click Here to Respond
+                    </a>
+                </div>
+            `
+        });
+
+        if (error) {
+            console.error('Resend SDK Error:', error);
+        } else {
+            console.log(`Email sent successfully! ID: ${data.id}`);
+        }
+
+    } catch (err) {
+        console.error('Email Sending Failed:', err);
+    }
+};
 
   const mailOptions = {
     to: toEmail,
@@ -74,7 +84,7 @@ const sendInvitationEmail = async (toEmail, eventTitle, ownerName) => {
     console.error(`Resend (SMTP) Error (to: ${toEmail}):`, error.message);
     // หากยังไม่ได้ ให้ตรวจสอบว่า RESEND_API_KEY ถูกใส่ใน .env ถูกต้องหรือไม่
   }
-};
+
 // -----------------------------------------------------------------
 // ⭐️ (2. "อัปเกรด" (Upgrade) ... ฟังก์ชัน "Discord Helper")
 // (มันจะ "รับ" (Receive) ... "ID" ... (แทน "URL"))

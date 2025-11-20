@@ -10,23 +10,28 @@ const Webhook = require('../models/webhookModel.js');
 
 // (ฟังก์ชัน "Email Helper" ... "เหมือนเดิม")
 const sendInvitationEmail = async (toEmail, eventTitle, ownerName) => {
-    const SENDER = process.env.SENDER_EMAIL; 
-    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"; 
-    const rsvpLink = `${FRONTEND_URL}/Easyevent/invited`; 
+    const SENDER = process.env.SENDER_EMAIL;
+    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+    const rsvpLink = `${FRONTEND_URL}/Easyevent/invited`;
 
-    // Resend Sandbox Check
+    // Check Sandbox (ส่งได้เฉพาะอีเมลตัวเองในโหมดฟรี)
     if (!toEmail || toEmail.toLowerCase() !== SENDER.toLowerCase()) {
-        console.log(`Skipping email to ${toEmail} (Sandbox Mode)`);
+        console.log(`[Email] Sandbox Mode: Skipping email to ${toEmail}`);
         return; 
     }
 
-    // ⭐️ ใช้ Resend SDK แทน Nodemailer (ผ่าน HTTP ไม่โดนบล็อก)
+    // เช็ก Key
+    if (!process.env.RESEND_API_KEY) {
+        console.error('[Email] Missing RESEND_API_KEY');
+        return;
+    }
+
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
         const { data, error } = await resend.emails.send({
             from: 'Event App <onboarding@resend.dev>',
-            to: [toEmail], // ต้องเป็น Array
+            to: [toEmail],
             subject: `[Event Invitation] 💌 คุณถูกเชิญเข้าร่วม: ${eventTitle}`,
             html: `
                 <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
@@ -40,97 +45,35 @@ const sendInvitationEmail = async (toEmail, eventTitle, ownerName) => {
         });
 
         if (error) {
-            console.error('Resend SDK Error:', error);
+            console.error('[Email] Resend Error:', error);
         } else {
-            console.log(`Email sent successfully! ID: ${data.id}`);
+            console.log(`[Email] Sent successfully! ID: ${data.id}`);
         }
-
     } catch (err) {
-        console.error('Email Sending Failed:', err);
+        console.error('[Email] Sending Failed:', err);
     }
 };
-
-  const mailOptions = {
-    to: toEmail,
-    from: 'Event App <onboarding@resend.dev>',
-    subject: `[Event Invitation] 💌 คุณถูกเชิญเข้าร่วม: ${eventTitle}`,
-
-    // ⭐️⭐️⭐️ FIX: HTML BODY แบบเก่า ⭐️⭐️⭐️
-    html: `
-                <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                    <h2>คำเชิญเข้าร่วมกิจกรรม</h2>
-                    <p>คุณ <strong>${ownerName}</strong> ได้เชิญคุณเข้าร่วมกิจกรรม:</p>
-                    <h3>${eventTitle}</h3>
-                    <p>กรุณาตอบรับการเข้าร่วมกิจกรรม (RSVP) โดยคลิกที่ลิงก์ด้านล่าง:</p>
-                    <p>
-                        <a href="${rsvpLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 0;">
-                            Click Here to Respond
-                        </a>
-                    </p>
-                    <p style="font-size: 12px; color: #777;">
-                        หากลิงก์ด้านบนไม่สามารถคลิกได้ กรุณาคัดลอกลิงก์นี้ไปวางในเบราว์เซอร์ของคุณ: ${rsvpLink}
-                    </p>
-                    <br>
-                    <p>ขอขอบคุณ</p>
-                </div>
-            `
-  };
-
-  // 5. Send Mail
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email invitation sent (via Resend) to ${toEmail}`);
-  } catch (error) {
-    console.error(`Resend (SMTP) Error (to: ${toEmail}):`, error.message);
-    // หากยังไม่ได้ ให้ตรวจสอบว่า RESEND_API_KEY ถูกใส่ใน .env ถูกต้องหรือไม่
-  }
 
 // -----------------------------------------------------------------
 // ⭐️ (2. "อัปเกรด" (Upgrade) ... ฟังก์ชัน "Discord Helper")
 // (มันจะ "รับ" (Receive) ... "ID" ... (แทน "URL"))
 // -----------------------------------------------------------------
 const notifyDiscord = async (message, webhookId) => {
-  // 1. (เช็ก ID ... "เหมือนเดิม")
-  if (!webhookId) {
-    console.log('No webhookId provided. Skipping notification.');
-    return;
-  }
-
+  if (!webhookId) return;
   try {
-    // 2. (ค้นหา URL จริง ... "เหมือนเดิม")
     const webhook = await Webhook.findById(webhookId);
-    if (!webhook || !webhook.url) {
-      console.log(`Webhook (${webhookId}) not found or has no URL.`);
-      return;
-    }
+    if (!webhook || !webhook.url) return;
 
-    // --- (นี่คือส่วนที่ "อัปเกรด" (Upgraded)) ---
-
-    // 3. (ดึง "ลิงก์หน้าบ้าน" (Frontend Link) ... (จาก .env))
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
-
-    // 4. (สร้าง "ลิงก์เชิญ" (Invite Link) ... "แบบเก่า" (Old style))
     const inviteLink = `${FRONTEND_URL}/Easyevent/invited`;
-
-    // 5. (สร้าง "ข้อความ" (Content) ... "ใหม่" (New) ... (ที่เรา "ต้องการ" (Want)))
-    const newContent =
-      `@everyone [สร้าง Event ใหม่] 🚀: ${message}\n\n` + // 👈 (@everyone)
-      `คลิกเพื่อตอบรับ (Respond):\n${inviteLink}`;     // 👈 (Invite Link)
-
-    // --- (จบส่วนที่ "อัปเกรด") ---
-
-    // 6. (ยิง "ข้อความใหม่" (New Content) ... ไปที่ "URL จริง" (Actual URL))
+    
     await axios.post(webhook.url, {
-      content: newContent
+      content: `@everyone [Event Update] 🚀: ${message}\nLink: ${inviteLink}`
     });
-
-    console.log('Discord Notification sent (with @everyone and Link)!');
-
   } catch (error) {
     console.error('Discord Notify failed:', error.message);
   }
 }
-
 // (GET /myevents ... "เหมือนเดิม")
 router.get('/myevents', protect, async (req, res) => {
   try {

@@ -117,7 +117,7 @@ router.get('/line/callback', async (req, res) => {
   const ourUserId = state; 
 
   // ( "ตั้งค่า" (Setup) ... "กุญแจ" (Keys) ... "ของเรา" (Our))
-  const REDIRECT_URI = 'http://localhost:5000/api/auth/line/callback';
+  const REDIRECT_URI = 'https://easyevent.onrender.com/api/auth/line/callback';
   const CLIENT_ID = process.env.LINE_LOGIN_CHANNEL_ID;
   const CLIENT_SECRET = process.env.LINE_LOGIN_CHANNEL_SECRET;
 

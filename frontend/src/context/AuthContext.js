@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   // 3. ฟังก์ชัน Login (ที่คุณถามถึง)
   const login = async (email, password) => {
     try {
-      const { data } = await api.post('/api/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password });
       
       // ⭐️ สร้าง Object ข้อมูลที่จะเก็บ (ต้องมี _id และ lineUserId)
       const userData = {

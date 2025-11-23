@@ -308,7 +308,7 @@ const ConnectionSettings = () => {
     const CLIENT_ID = process.env.REACT_APP_LINE_LOGIN_CHANNEL_ID;
 
     // (2. "ที่อยู่" (Address) ... "ของ" (Of) ... "Backend" (Backend) ... (ที่เรา "ตั้ง" (Set) ... "ไว้" (Up) ... "ใน" (In) ... "LINE Dev"))
-    const REDIRECT_URI = 'http://localhost:5000/api/auth/line/callback';
+    const REDIRECT_URI = 'https://easyevent.onrender.com/api/auth/line/callback';
 
     // (3. "ส่ง" (Send) ... 'user._id' ... "ของ "เรา"" (Of "Us") ... "ไป" (Go) ... "ด้วย" (With) ... (ใน "state"))
     // ( ... "เพื่อ" (So) ... "Backend" (Backend) ... "จะ "รู้"" (Will "Know") ... "ว่า "ใคร"" (WHO) ... "คือ" (Is) ... "คนที่" (The one) ... "กด" (Pressing) ... "ลิงก์" (Link) ... "นี้" (This))

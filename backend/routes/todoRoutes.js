@@ -31,6 +31,37 @@ const checkEventAccess = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Todos
+ *   description: ระบบจัดการงานย่อย (Tasks)
+ */
+
+/**
+ * @swagger
+ * /api/todos/{eventId}:
+ *   get:
+ *     summary: ดึงงานย่อยทั้งหมดของ Event
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Event
+ *     responses:
+ *       200:
+ *         description: รายการงานย่อย
+ *       401:
+ *         description: Not authorized
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ GET /api/todos/:eventId
 // (ดึง "งานย่อย" (Tasks) ... "ทั้งหมด" (All) ... "ของ" (Of) ... "Event" (Event) ... "นี้" (This))
@@ -45,6 +76,44 @@ router.get('/:eventId', protect, checkEventAccess, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/todos/{eventId}:
+*   post:
+ *     summary: สร้างงานย่อยใหม่สำหรับ Event
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Event
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 description: ข้อความของงานย่อย
+ *     responses:
+ *       201:
+ *         description: Task created
+ *       400:
+ *         description: Task text is required
+ *       401:
+ *         description: Not authorized
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ POST /api/todos/:eventId
@@ -72,6 +141,32 @@ router.post('/:eventId', protect, checkEventAccess, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/todos/{todoId}/toggle:
+ *   put:
+ *     summary: ติ๊ก/สลับสถานะงานย่อย (เสร็จ/ไม่เสร็จ)
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: todoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Task
+ *     responses:
+ *       200:
+ *         description: Task updated
+ *       401:
+ *         description: Not authorized
+ *       404:
+ *         description: Task not found
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ PUT /api/todos/:todoId/toggle
 // ( "ติ๊ก" (Toggle) ... "สถานะ" (Status) ... "เสร็จ" (Complete) / "ไม่เสร็จ" (Incomplete))
@@ -93,6 +188,32 @@ router.put('/:todoId/toggle', protect, checkEventAccess, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/todos/{todoId}:
+ *   delete:
+ *     summary: ลบงานย่อย
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: todoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Task
+ *     responses:
+ *       200:
+ *         description: Task removed
+ *       401:
+ *         description: Not authorized to delete this task
+ *       404:
+ *         description: Task not found
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ DELETE /api/todos/:todoId

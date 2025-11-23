@@ -7,6 +7,39 @@ const notifyLine = require('../utils/lineNotify');
 const Comment = require('../models/commentModel.js'); 
 const Event = require('../models/eventModel.js'); 
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Comments
+ *   description: ระบบสนทนา
+ */
+
+/**
+ * @swagger
+ * /api/comments/{eventId}:
+ *   get:
+ *     summary: ดึงคอมเมนต์แม่ทั้งหมดของอีเวนต์
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของอีเวนต์
+ *     responses:
+ *       200:
+ *         description: รายการคอมเมนต์แม่
+ *       401:
+ *         description: ไม่มีสิทธิ์เข้าถึงอีเวนต์นี้
+ *       404:
+ *         description: ไม่พบอีเวนต์
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ (อัปเกรด V2!) GET /api/comments/:eventId
 // (ดึง "เฉพาะ" (ONLY) ... "คอมเมนต์ "แม่"" (Parent "Comments"))
@@ -47,6 +80,28 @@ router.get('/:eventId', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/comments/replies/{commentId}:
+ *   get:
+ *     summary: ดึง replies ทั้งหมดของคอมเมนต์แม่
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของคอมเมนต์แม่
+ *     responses:
+ *       200:
+ *         description: รายการ replies
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ (API "ใหม่"!) GET /api/comments/replies/:commentId
 // (ดึง "คำตอบกลับ" (Replies) ... "ทั้งหมด" (All) ... "ของ" (Of) ... "คอมเมนต์ "แม่"" (Parent "Comment") ... "นี้" (This))
@@ -69,6 +124,48 @@ router.get('/replies/:commentId', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/comments/{eventId}:
+ *   post:
+ *     summary: สร้างคอมเมนต์ใหม่ (คอมเมนต์แม่หรือ reply)
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของอีเวนต์
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               parentCommentId:
+ *                 type: string
+ *             required:
+ *               - text
+ *     responses:
+ *       201:
+ *         description: คอมเมนต์ถูกสร้างสำเร็จ
+ *       400:
+ *         description: ไม่ได้ใส่ข้อความคอมเมนต์
+ *       401:
+ *         description: ไม่มีสิทธิ์คอมเมนต์ในอีเวนต์นี้
+ *       404:
+ *         description: ไม่พบอีเวนต์
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (อัปเกรด V2!) POST /api/comments/:eventId

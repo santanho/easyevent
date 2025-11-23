@@ -3,6 +3,49 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware.js');
 const User = require('../models/userModel.js'); // (Model ที่เราเพิ่ง "แก้" (Modified) ... ใน "ขั้นตอนที่ 1")
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Users
+ *   description: ระบบผู้ใช้งาน
+ */
+
+/**
+ * @swagger
+ * /api/users/search:
+ *   get:
+ *     summary: ค้นหา User (ยกเว้นตัวเอง)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: คำค้นหา (ชื่อ หรือ อีเมล)
+ *     responses:
+ *       200:
+ *         description: รายชื่อผู้ใช้ที่ค้นหา
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   profileColor:
+ *                     type: string
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // (เราจะ "เพิ่ม" (Add) ... API 'search' ... "ทิ้งไว้" (Leave it here) ... "เผื่อ" (In case) ... "อนาคต" (Future) ... เราจะทำ "ระบบเพื่อน")
 // @route   GET /api/users/search
@@ -26,6 +69,48 @@ router.get('/search', protect, async (req, res) => {
 });
 // -----------------------------------------------------------------
 
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     summary: อัปเดตชื่อและสีโปรไฟล์ของตัวเอง
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: ชื่อใหม่
+ *               profileColor:
+ *                 type: string
+ *                 description: "สีโปรไฟล์ใหม่ (ตัวอย่าง: \"#ff0000\")"
+ *     responses:
+ *       200:
+ *         description: ข้อมูลผู้ใช้ที่อัปเดตแล้ว
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 profileColor:
+ *                   type: string
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (API "ใหม่" (New) ... ที่เรา "ต้องการ" (NEED) ... สำหรับ "หน้า Setting")

@@ -8,6 +8,39 @@ const Poll = require('../models/pollModel.js');
 const PollOption = require('../models/pollOptionModel.js');
 const Event = require('../models/eventModel.js'); // (เรา "ต้องการ" (Need) ... "Event" ... เพื่อ "เช็ก" (Check) ... "สิทธิ์" (Permission))
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Polls
+ *   description: ระบบโหวต
+ */
+
+/**
+ * @swagger
+ * /api/polls/{eventId}:
+ *   get:
+ *     summary: ดึงโพลทั้งหมดของ Event
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Event
+ *     responses:
+ *       200:
+ *         description: รายการโพลทั้งหมด
+ *       401:
+ *         description: Not authorized
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ GET /api/polls/:eventId
 // (ดึง "โพลทั้งหมด" (All Polls) ... "ของ" (Of) ... "Event (กิจกรรม)" ... "นี้" (This))
@@ -43,6 +76,50 @@ router.get('/:eventId', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/polls/{eventId}:
+ *   post:
+ *     summary: สร้างโพลใหม่สำหรับ Event
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Event
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - question
+ *               - options
+ *             properties:
+ *               question:
+ *                 type: string
+ *               options:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Poll created
+ *       400:
+ *         description: Poll needs a question and at least 2 options
+ *       401:
+ *         description: Not authorized
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ POST /api/polls/:eventId
@@ -113,6 +190,45 @@ router.post('/:eventId', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/polls/{pollId}/add-option:
+ *   post:
+ *     summary: เพิ่มตัวเลือกใหม่ใน Poll
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: pollId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Poll
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - optionText
+ *             properties:
+ *               optionText:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Poll updated
+ *       400:
+ *         description: Option text is required
+ *       401:
+ *         description: Not authorized
+ *       404:
+ *         description: Poll or Event not found
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ POST /api/polls/:pollId/add-option
 // (เพิ่ม "ตัวเลือก" (Option) ใหม่ ... ลงใน "โพล" (Poll))
@@ -180,6 +296,32 @@ router.post('/:pollId/add-option', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/polls/vote/{optionId}:
+ *   put:
+ *     summary: โหวตตัวเลือก (สามารถติ๊ก/ยกเลิกติ๊ก)
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: optionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Poll Option
+ *     responses:
+ *       200:
+ *         description: Poll updated
+ *       401:
+ *         description: Not authorized to vote
+ *       404:
+ *         description: Option or Poll not found
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ PUT /api/polls/vote/:optionId
 // ( "โหวต" (Vote) ... "ตัวเลือก" (Option) ... "นี้" (This))
@@ -236,6 +378,32 @@ router.put('/vote/:optionId', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/polls/{pollId}:
+ *   delete:
+ *     summary: ลบ Poll และตัวเลือกทั้งหมด
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: pollId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Poll
+ *     responses:
+ *       200:
+ *         description: Poll and all its options successfully deleted
+ *       401:
+ *         description: Not authorized to delete this poll
+ *       404:
+ *         description: Poll or Parent Event not found
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ (API ใหม่!) DELETE /api/polls/:pollId
 // ( "ลบ "โพล"" (Delete "Poll") ... (และ "ตัวเลือก" (Options) ... "ทั้งหมด" (All) ... "ของ" (Of) ... "มัน" (It)))
@@ -275,6 +443,32 @@ router.delete('/:pollId', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/polls/{pollId}/reset:
+ *   put:
+ *     summary: ล้างผลโหวตทั้งหมดของ Poll
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: pollId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Poll
+ *     responses:
+ *       200:
+ *         description: Poll votes reset
+ *       401:
+ *         description: Not authorized (Only the poll author can reset votes)
+ *       404:
+ *         description: Poll not found
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (API ใหม่!) PUT /api/polls/:pollId/reset
@@ -319,6 +513,32 @@ router.put('/:pollId/reset', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/polls/option/{optionId}:
+ *   delete:
+ *     summary: ลบตัวเลือกออกจาก Poll
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: optionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Poll Option
+ *     responses:
+ *       200:
+ *         description: Poll updated
+ *       401:
+ *         description: Not authorized to delete this option
+ *       404:
+ *         description: Option or Poll not found
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (API ใหม่!) DELETE /api/polls/option/:optionId
@@ -366,4 +586,3 @@ router.delete('/option/:optionId', protect, async (req, res) => {
 });
 
 module.exports = router;
-

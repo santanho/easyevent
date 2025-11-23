@@ -1,6 +1,8 @@
 const express = require('express');
 const connectDB = require('./config/db.js');
 
+const swaggerDocs = require('./swagger');
+
 const authRoutes = require('./routes/authRoutes.js');
 const eventRoutes = require('./routes/eventRoutes.js');
 const userRoutes = require('./routes/userRoutes.js'); 
@@ -34,6 +36,8 @@ app.use('/api/todos', todoRoutes);
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
+
+swaggerDocs(app);
 
 const PORT = process.env.PORT || 5000;
 

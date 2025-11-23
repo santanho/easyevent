@@ -7,6 +7,13 @@ const bcrypt = require('bcryptjs');
 
 const axios = require('axios');
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Auth
+ *   description: ระบบจัดการสมาชิก (Login/Register)
+ */
+
 require('dotenv').config();
 
 // ฟังก์ชันสร้าง Token
@@ -15,6 +22,37 @@ const generateToken = (id) => {
     expiresIn: '30d', // Token มีอายุ 30 วัน
   });
 };
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: สมัครสมาชิกใหม่
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: สมัครสำเร็จ
+ *       400:
+ *         description: อีเมลซ้ำ
+ */
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -40,6 +78,35 @@ router.post('/register', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: เข้าสู่ระบบ (Login)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: santanho5@gmail.com
+ *               password:
+ *                 type: string
+ *                 example: 1234
+ *     responses:
+ *       200:
+ *         description: Login สำเร็จ (ได้รับ Token)
+ *       401:
+ *         description: รหัสผ่านผิด
+ */
+
 // @route   POST /api/auth/login
 // @desc    Login (Authenticate user & get token)
 router.post('/login', async (req, res) => {
@@ -48,7 +115,7 @@ router.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ email });
 
-    // ตรวจสอบ User และ Password (ใช้ method ที่เราสร้างใน model)
+    // ตรวจสอบ User และ Password 
     if (user && (await user.matchPassword(password))) {
       res.json({
         _id: user._id,
@@ -65,6 +132,35 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   put:
+ *     summary: เปลี่ยนรหัสผ่าน
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: เปลี่ยนรหัสสำเร็จ
+ *       401:
+ *         description: รหัสผ่านเดิมไม่ถูกต้อง
+ *       400:
+ *         description: ข้อมูลไม่ครบ
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (API ใหม่!) PUT /api/auth/change-password
@@ -99,6 +195,29 @@ router.put('/change-password', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/auth/line/callback:
+ *   get:
+ *     summary: รับค่า Callback จาก LINE Login
+ *     tags: [Auth]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *         description: Code ที่ได้จาก LINE
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *         description: User ID ของเรา
+ *     responses:
+ *       302:
+ *         description: Redirect กลับหน้าเว็บ
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (API ใหม่!) GET /api/auth/line/callback

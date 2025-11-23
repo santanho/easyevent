@@ -3,6 +3,43 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware.js');
 const Webhook = require('../models/webhookModel.js'); // (Model ใหม่... จาก "ภารกิจที่ 2")
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Webhooks
+ *   description: ระบบจัดการ Webhooks
+ */
+
+/**
+ * @swagger
+ * /api/webhooks:
+ *   get:
+ *     summary: ดึง Webhooks ทั้งหมดของผู้ใช้
+ *     tags: [Webhooks]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการ Webhooks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   url:
+ *                     type: string
+ *                   owner:
+ *                     type: string
+ *       500:
+ *         description: Server Error
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ GET /api/webhooks
 // (ดึง "Webhooks ทั้งหมด" ... "ของเรา" (My))
@@ -15,6 +52,39 @@ router.get('/', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/webhooks:
+*   post:
+ *     summary: สร้าง Webhook ใหม่
+ *     tags: [Webhooks]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - url
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: ชื่อ Webhook
+ *               url:
+ *                 type: string
+ *                 description: URL ของ Webhook
+ *     responses:
+ *       201:
+ *         description: Webhook created
+ *       400:
+ *         description: Please provide name and URL
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ POST /api/webhooks
@@ -37,6 +107,32 @@ router.post('/', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/webhooks/{id}:
+ *   delete:
+ *     summary: ลบ Webhook
+ *     tags: [Webhooks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID ของ Webhook
+ *     responses:
+ *       200:
+ *         description: Webhook removed
+ *       401:
+ *         description: Not authorized
+ *       404:
+ *         description: Webhook not found
+ *       500:
+ *         description: Server Error
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ DELETE /api/webhooks/:id

@@ -8,6 +8,13 @@ const Event = require('../models/eventModel.js');
 const User = require('../models/userModel.js');
 const Webhook = require('../models/webhookModel.js');
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Events
+ *   description: จัดการกิจกรรม (Events & Itinerary)
+ */
+
 // (ฟังก์ชัน "Email Helper" ... "เหมือนเดิม")
 const sendInvitationEmail = async (toEmail, eventTitle, ownerName) => {
     const SENDER = process.env.SENDER_EMAIL;
@@ -74,6 +81,20 @@ const notifyDiscord = async (message, webhookId) => {
     console.error('Discord Notify failed:', error.message);
   }
 }
+
+/**
+ * @swagger
+ * /api/events/myevents:
+ *   get:
+ *     summary: ดึงรายการ Event ทั้งหมดของฉัน (ที่เป็น Owner หรือ Accepted Guest)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการ Events ของฉัน
+ */
+
 // (GET /myevents ... "เหมือนเดิม")
 router.get('/myevents', protect, async (req, res) => {
   try {
@@ -116,6 +137,19 @@ router.get('/myevents', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/events/invited:
+ *   get:
+ *     summary: ดึงรายการ Event ที่เชิญฉัน (pending)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการ Events ที่รอการตอบรับ
+ */
+
 // (GET /invited ... "เหมือนเดิม")
 router.get('/invited', protect, async (req, res) => {
   try {
@@ -131,6 +165,19 @@ router.get('/invited', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/events/invited/count:
+ *   get:
+ *     summary: ดูจำนวน Event ที่กำลังรอให้ฉันตอบรับ (pending)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: จำนวน pending invitations
+ */
+
 // (GET /invited/count ... "เหมือนเดิม")
 router.get('/invited/count', protect, async (req, res) => {
   try {
@@ -145,6 +192,35 @@ router.get('/invited/count', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/events/rsvp/{eventId}:
+ *   put:
+ *     summary: ตอบรับ (accepted / rejected) สำหรับ Event ที่เชิญมา
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [accepted, rejected]
+ *     responses:
+ *       200:
+ *         description: อัปเดตสถานะสำเร็จ
+ */
 
 // (PUT /rsvp/:eventId ... "เหมือนเดิม")
 router.put('/rsvp/:eventId', protect, async (req, res) => {
@@ -181,6 +257,45 @@ router.put('/rsvp/:eventId', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/events:
+ *   post:
+ *     summary: สร้าง Event ใหม่
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               startTime:
+ *                 type: string
+ *               endTime:
+ *                 type: string
+ *               guests:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               webhookId:
+ *                 type: string
+ *               color:
+ *                 type: string
+ *               parentEventId:
+ *                 type: string
+ *               eventType:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: สร้าง Event สำเร็จ
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (3. "อัปเกรด" (Upgrade) ... POST /api/events (Create))
@@ -252,6 +367,42 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   put:
+ *     summary: แก้ไข Event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title: { type: string }
+ *               description: { type: string }
+ *               startTime: { type: string }
+ *               endTime: { type: string }
+ *               guests:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               webhookId: { type: string }
+ *               color: { type: string }
+ *     responses:
+ *       200:
+ *         description: อัปเดตสำเร็จ
+ */
+
 // -----------------------------------------------------------------
 // ⭐️ (4. "อัปเกรด" (Upgrade) ... PUT /api/events/:id (Update))
 // -----------------------------------------------------------------
@@ -304,6 +455,25 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   delete:
+ *     summary: ลบ Event หรือออกจาก Event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: ลบหรือออกจาก Event สำเร็จ
+ */
+
 // (DELETE /:id ... "เหมือนเดิม")
 router.delete('/:id', protect, async (req, res) => {
   try {
@@ -331,6 +501,25 @@ router.delete('/:id', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   get:
+ *     summary: ดึงข้อมูล Event เดี่ยว (สำหรับหน้า Details)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: รายละเอียด Event
+ */
 
 // -----------------------------------------------------------------
 // ⭐️ (API ใหม่!) GET /api/events/:id
@@ -361,6 +550,25 @@ router.get('/:id', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /api/events/{id}/sub-events:
+ *   get:
+ *     summary: ดึงกิจกรรมลูกทั้งหมดของ Event แม่
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: รายการ Sub Events
+ */
 
 // ⭐️ GET /api/events/:id/sub-events (ดึงกิจกรรมลูก)
 router.get('/:id/sub-events', protect, async (req, res) => {
